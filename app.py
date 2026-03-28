@@ -18,6 +18,7 @@ import streamlit.components.v1 as components
 import pdfplumber
 import re
 import unicodedata
+import pandas as pd
 
 
 # ============================================================
@@ -445,6 +446,33 @@ if uploaded_file:
                     st.metric("合計", f"{data[section]['total']:,.2f} ㎡")
                 else:
                     st.write("該当なし")
+
+        # ============================================================
+        # CSVダウンロード
+        # ============================================================
+        csv_rows = []
+        for section in sections:
+            for label, area in data[section]["areas"]:
+                csv_rows.append({
+                    "区分": section,
+                    "階": label,
+                    "面積㎡": f"{area:.2f}"
+                })
+
+        if csv_rows:
+            df_csv = pd.DataFrame(csv_rows)
+
+            csv_bytes = df_csv.to_csv(
+                index=False,
+                encoding="utf-8-sig"
+            ).encode("utf-8-sig")
+
+            st.download_button(
+                label="CSVをダウンロード",
+                data=csv_bytes,
+                file_name="building_area_summary.csv",
+                mime="text/csv"
+            )
 
     except Exception as e:
         st.error("解析中にエラーが発生しました。")
